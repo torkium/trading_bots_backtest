@@ -18,7 +18,6 @@ class Strat1:
     def apply(self):
         #Used to check previous period, and not current period (because not closed)
         lastIndex = self.historic.first_valid_index()
-
         #For each historical entry
         for index, row in self.historic.iterrows():
             #Check buy condition
@@ -42,6 +41,7 @@ class Strat1:
                 self.step = "wait_rsi_cross_bullish"
         if self.step == "wait_rsi_cross_bullish":
             if self.historic['RSI'][lastIndex] > 30 and self.wallet.base > 10:
+                self.step = "main"
                 return 100
             if self.historic['RSI'][lastIndex] >50:
                 self.step = "main"
@@ -54,6 +54,7 @@ class Strat1:
                 self.step = "wait_rsi_cross_bearish"
         if self.step == "wait_rsi_cross_bearish":
             if self.historic['RSI'][lastIndex] < 70 and self.wallet.trade > 0.0001:
+                self.step = "main"
                 return 100
             if self.historic['RSI'][lastIndex] <50:
                 self.step = "main"
