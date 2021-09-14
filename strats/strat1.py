@@ -40,13 +40,13 @@ class Strat1:
             sellCondition = self.sellCondition(lastIndex)
             if buyCondition > 0:
                 #Execute buy order
-                self.wallet.addTransaction(Orders.setOrderBuy(self.wallet, buyCondition, self.historic['open'][index], Exchange.feesRate, index), lastIndex)
-                print(self.wallet.transactions[lastIndex].toString())
+                self.wallet.addTransaction(Orders.setOrderBuy(self.wallet, buyCondition, self.historic['open'][index], Exchange.feesRate, index), index)
+                print(self.wallet.transactions[index].toString())
             #Check sell condition
             elif sellCondition > 0:
                 #Execute sell order
-                self.wallet.addTransaction(Orders.setOrderSell(self.wallet, sellCondition, self.historic['open'][index], Exchange.feesRate, index), lastIndex)
-                print(self.wallet.transactions[lastIndex].toString())
+                self.wallet.addTransaction(Orders.setOrderSell(self.wallet, sellCondition, self.historic['open'][index], Exchange.feesRate, index), index)
+                print(self.wallet.transactions[index].toString())
                 print(self.wallet.toString())
             lastIndex = index
         #Close the wallet at the end
@@ -59,25 +59,13 @@ class Strat1:
     #To determine buy condition
     def buyConditions(self,lastIndex):
         if self.step == "main":
-            if self.historic['RSI'][lastIndex] < 30:
-                self.step = "wait_rsi_cross_bullish"
-        if self.step == "wait_rsi_cross_bullish":
-            if self.historic['RSI'][lastIndex] > 30 and self.wallet.base > 10:
-                self.step = "main"
+            if self.historic['EMA20EVOL'][lastIndex] > 1 and self.wallet.base > 10:
                 return 100
-            if self.historic['RSI'][lastIndex] >50:
-                self.step = "main"
         return 0
     
     #To determine sell condition
     def sellCondition(self, lastIndex):
         if self.step == "main":
-            if self.historic['RSI'][lastIndex] > 70:
-                self.step = "wait_rsi_cross_bearish"
-        if self.step == "wait_rsi_cross_bearish":
-            if self.historic['RSI'][lastIndex] < 70 and self.wallet.trade > 0.0001:
-                self.step = "main"
+            if (self.historic['EMA20EVOL'][lastIndex] == -2 or (self.historic['EMA20EVOL'][lastIndex] > 1 and self.historic['RSI'][lastIndex] > 80)) and self.wallet.trade > 0.001:
                 return 100
-            if self.historic['RSI'][lastIndex] <50:
-                self.step = "main"
         return 0

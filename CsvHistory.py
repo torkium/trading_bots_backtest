@@ -12,7 +12,7 @@ class CSVHistory:
         fileName = tradingCurrency + baseCurrency + mainTimeFrame + str(startDate) + str(endDate) + ".csv"
         f = open('./' + fileName, 'w', encoding='UTF8', newline="")
         writer = csv.writer(f, delimiter=';')
-        headers = ['datetime', 'action', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_av', 'trades', 'tb_base_av', 'tb_quote_av', 'ignore', 'SMA20', 'SMA50', 'SMA100', 'SMA200', 'EMA20', 'EMA50', 'EMA100', 'EMA200', 'RSI', 'MACD', 'MACDDIFF', 'MACDSIGN']
+        headers = ['datetime', 'action', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_av', 'trades', 'tb_base_av', 'tb_quote_av', 'ignore', 'SMA20', 'SMA50', 'SMA100', 'SMA200', 'EMA20', 'EMA20EVOL', 'EMA50', 'EMA100', 'EMA200', 'RSI', 'MACD', 'MACDDIFF', 'MACDSIGN']
         writer.writerow(headers)
         headers.remove('datetime')
         headers.remove('action')

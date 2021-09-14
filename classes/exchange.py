@@ -42,4 +42,6 @@ class Exchange:
             return Client.KLINE_INTERVAL_12HOUR
         if timeframe == "1d":
             return Client.KLINE_INTERVAL_1DAY
+        if timeframe == "1w":
+            return Client.KLINE_INTERVAL_1WEEK
         

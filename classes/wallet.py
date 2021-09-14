@@ -40,4 +40,4 @@ class Wallet:
     def toString(self):
         if self.finalPrice == False:
             return "[Wallet State] : From " + str(self.start) + " to " + str(self.end) + " " + self.baseCurrency + " (" + str(self.getPercentEvolution()) + "%) " + ". Estimated total fees : " + str(self.totalFees) + " " + self.baseCurrency + "."
-        return "[Wallet State] : From " + str(self.start) + " to " + str(self.end) + " " + self.baseCurrency + " (" + str(self.getPercentEvolution()) + "%) " + ". Estimated total fees : " + str(self.totalFees) + " " + self.baseCurrency + ". ------- " + "Buy and hold result, from ", str(self.start) + " " + self.baseCurrency ," to ", str((self.start / self.startPrice) * self.finalPrice) + " " + self.baseCurrency
+        return "[Wallet State] : From " + str(self.start) + " to " + str(self.end) + " " + self.baseCurrency + " (" + str(self.getPercentEvolution()) + "%) " + ". Estimated total fees : " + str(self.totalFees) + " " + self.baseCurrency + ". ------- " + "Buy and hold result, from ", str(self.start) + " " + self.baseCurrency ," to ", str(self.start * self.finalPrice / self.startPrice) + " " + self.baseCurrency
