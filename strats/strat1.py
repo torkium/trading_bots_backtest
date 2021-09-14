@@ -1,3 +1,4 @@
+from CsvHistory import CSVHistory
 from classes.exchange import Exchange
 from classes.indicators import Indicators
 from classes.wallet import Wallet
@@ -9,14 +10,25 @@ class Strat1:
     historic = False
     wallet = False
     step = "main"
+    baseCurrency = None
+    tradingCurrency = None
+    mainTimeFrame = None
+    startDate = None
+    endDate = None
+    base = None
+    trade = None
 
     def __init__(self, baseCurrency, tradingCurrency, base, trade, mainTimeFrame, startDate, endDate=None):
         self.historic = Exchange.getHistoric(tradingCurrency+baseCurrency, mainTimeFrame, startDate, endDate)
         self.wallet = Wallet(baseCurrency, tradingCurrency, base, trade, self.historic['close'].iloc[0])
         Indicators.setIndicators(self.historic)
-        fileName = tradingCurrency + baseCurrency + mainTimeFrame + str(startDate) + str(endDate)
-        f = open('./' + fileName, 'w')
-        writer = csv.writer(f)
+        self.baseCurrency = baseCurrency
+        self.tradingCurrency = tradingCurrency
+        self.base = base
+        self.trade = trade
+        self.mainTimeFrame = mainTimeFrame
+        self.startDate = startDate
+        self.endDate = endDate
 
     def apply(self):
         #Used to check previous period, and not current period (because not closed)
@@ -42,24 +54,30 @@ class Strat1:
 
         print(self.wallet.toString())
 
+        CSVHistory.write(self.baseCurrency, self.tradingCurrency, self.base, self.trade, self.mainTimeFrame, self.startDate, self.endDate, self.wallet.transactions)
+
     #To determine buy condition
     def buyConditions(self,lastIndex):
         if self.step == "main":
-            if self.historic['MACDDIFF'][lastIndex] < 0:
-                self.step = "wait_macd_cross_bullish"
-        if self.step == "wait_macd_cross_bullish":
-            if self.historic['MACDDIFF'][lastIndex] > 0 and self.wallet.base > 10:
+            if self.historic['RSI'][lastIndex] < 30:
+                self.step = "wait_rsi_cross_bullish"
+        if self.step == "wait_rsi_cross_bullish":
+            if self.historic['RSI'][lastIndex] > 30 and self.wallet.base > 10:
                 self.step = "main"
                 return 100
+            if self.historic['RSI'][lastIndex] >50:
+                self.step = "main"
         return 0
     
     #To determine sell condition
     def sellCondition(self, lastIndex):
         if self.step == "main":
-            if self.historic['MACDDIFF'][lastIndex] > 0:
-                self.step = "wait_macd_cross_bearish"
-        if self.step == "wait_macd_cross_bearish":
-            if self.historic['MACDDIFF'][lastIndex] < 0 and self.wallet.trade > 0.0001:
+            if self.historic['RSI'][lastIndex] > 70:
+                self.step = "wait_rsi_cross_bearish"
+        if self.step == "wait_rsi_cross_bearish":
+            if self.historic['RSI'][lastIndex] < 70 and self.wallet.trade > 0.0001:
                 self.step = "main"
                 return 100
+            if self.historic['RSI'][lastIndex] <50:
+                self.step = "main"
         return 0
