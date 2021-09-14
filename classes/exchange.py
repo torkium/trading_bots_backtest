@@ -4,11 +4,13 @@ import pandas as pd
 class Exchange:
     historic = {}
 
+    feesRate = 0.1/100
+
     @staticmethod
-    def getHistoric(devise, timeframe, startDate):
+    def getHistoric(devise, timeframe, startDate, endDate=None):
         if timeframe not in Exchange.historic:
             #Get history from Binance
-            klinesT = Client().get_historical_klines(devise, Exchange.getTimeframe(timeframe), startDate)
+            klinesT = Client().get_historical_klines(devise, Exchange.getTimeframe(timeframe), startDate, endDate)
             #Set history as python DataFrame
             histo = pd.DataFrame(klinesT, columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_av', 'trades', 'tb_base_av', 'tb_quote_av', 'ignore' ])
 
