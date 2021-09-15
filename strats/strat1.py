@@ -1,5 +1,5 @@
 from CsvHistory import CSVHistory
-from classes.exchange import Exchange
+from exchanges.binance import Binance as Exchange
 from classes.indicators import Indicators
 from classes.wallet import Wallet
 from classes.orders import Orders
@@ -66,6 +66,6 @@ class Strat1:
     #To determine sell condition
     def sellCondition(self, lastIndex):
         if self.step == "main":
-            if (self.historic['EMA20EVOL'][lastIndex] == -2 or (self.historic['EMA20EVOL'][lastIndex] > 1 and self.historic['RSI'][lastIndex] > 80)) and self.wallet.trade > 0.001:
+            if (self.historic['EMA20EVOL'][lastIndex] == -2 or (self.historic['EMA20EVOL'][lastIndex] >= 1 and self.historic['RSI'][lastIndex] > 80)) and self.wallet.trade > 0.001:
                 return 100
         return 0

@@ -1,4 +1,4 @@
-from classes.exchange import Exchange
+from exchanges.binance import Binance as Exchange
 from classes.indicators import Indicators
 import pandas as pd
 import csv
