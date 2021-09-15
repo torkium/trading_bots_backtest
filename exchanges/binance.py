@@ -7,7 +7,8 @@ class Binance:
     feesRate = 0.1/100
 
     @staticmethod
-    def getHistoric(devise, timeframe, startDate, endDate=None):
+    def getHistoric(tradingCurrency, baseCurrency, timeframe, startDate, endDate=None):
+        devise = tradingCurrency+baseCurrency
         if timeframe not in Binance.historic:
             #Get history from Binance
             klinesT = Client().get_historical_klines(devise, Binance.getTimeframe(timeframe), startDate, endDate)

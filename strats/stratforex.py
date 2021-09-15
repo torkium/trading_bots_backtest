@@ -1,12 +1,12 @@
 from CsvHistory import CSVHistory
-from exchanges.binance import Binance as Exchange
+from exchanges.oanda import Oanda as Exchange
 from classes.indicators import Indicators
 from classes.wallet import Wallet
 from classes.orders import Orders
 import pandas as pd
 import csv
 
-class Strat1:
+class StratForex:
     historic = False
     wallet = False
     step = "main"
@@ -19,7 +19,7 @@ class Strat1:
     trade = None
 
     def __init__(self, baseCurrency, tradingCurrency, base, trade, mainTimeFrame, startDate, endDate=None):
-        self.historic = Exchange.getHistoric(tradingCurrency+baseCurrency, mainTimeFrame, startDate, endDate)
+        self.historic = Exchange.getHistoric(tradingCurrency, baseCurrency, mainTimeFrame, startDate, endDate)
         self.wallet = Wallet(baseCurrency, tradingCurrency, base, trade, self.historic['close'].iloc[0])
         Indicators.setIndicators(self.historic)
         self.baseCurrency = baseCurrency
@@ -54,18 +54,12 @@ class Strat1:
 
         print(self.wallet.toString())
 
-        CSVHistory.write(self.baseCurrency, self.tradingCurrency, self.base, self.trade, self.mainTimeFrame, self.startDate, self.endDate, self.wallet.transactions)
+        CSVHistory.write(Exchange, self.baseCurrency, self.tradingCurrency, self.base, self.trade, self.mainTimeFrame, self.startDate, self.endDate, self.wallet.transactions)
 
     #To determine buy condition
     def buyConditions(self,lastIndex):
-        if self.step == "main":
-            if self.historic['EMA20EVOL'][lastIndex] > 1 and self.wallet.base > 10:
-                return 100
         return 0
     
     #To determine sell condition
     def sellCondition(self, lastIndex):
-        if self.step == "main":
-            if (self.historic['EMA20EVOL'][lastIndex] == -2 or (self.historic['EMA20EVOL'][lastIndex] >= 1 and self.historic['RSI'][lastIndex] > 80)) and self.wallet.trade > 0.001:
-                return 100
         return 0
