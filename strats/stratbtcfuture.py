@@ -107,7 +107,7 @@ class StratBtcFuture:
     #To determine short open condition
     def shortOpenConditions(self, lastIndex):
         if self.step == "main":
-            if self.historic['EMA20EVOL'][lastIndex] < -1 and self.historic['EMATREND'][lastIndex] == -2 and self.historic['RSI'][lastIndex] > 30 and self.historic['RSIEVOL'][lastIndex] < -1 and self.wallet.hasPercentNotInPosition(10):
+            if self.historic['EMA20EVOL'][lastIndex] < -1 and self.historic['EMATREND'][lastIndex] == -2 and self.historic['RSI'][lastIndex] > 30 and self.historic['RSIEVOL'][lastIndex] < 1 and self.wallet.hasPercentNotInPosition(10):
                 return 50
         return 0
     
