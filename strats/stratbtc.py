@@ -50,22 +50,28 @@ class StratBtc:
                 print(self.wallet.toString())
             lastIndex = index
         #Close the wallet at the end
+        
+        if self.wallet.trade != 0:
+            self.wallet.addTransaction(Orders.setOrderSell(self.wallet, 100, self.historic['open'][index], Exchange.feesRate, index), index)
+        self.wallet.setEnd(self.historic['close'].iloc[-1])
+
+
         self.wallet.setEnd(self.historic['close'].iloc[-1])
 
         print(self.wallet.toString())
 
-        CSVHistory.write(Exchange, self.baseCurrency, self.tradingCurrency, self.base, self.trade, self.mainTimeFrame, self.startDate, self.endDate, self.wallet.transactions)
+        CSVHistory.write(Exchange, self.baseCurrency, self.tradingCurrency, self.mainTimeFrame, self.wallet, self.startDate, self.endDate)
 
     #To determine buy condition
     def buyConditions(self,lastIndex):
         if self.step == "main":
-            if self.historic['EMA20EVOL'][lastIndex] > 1 and self.wallet.base > 10:
+            if self.historic['EMA20EVOL'][lastIndex] > 1 and self.wallet.hasPercentBase(10, self.historic['close'][lastIndex]):
                 return 100
         return 0
     
     #To determine sell condition
     def sellCondition(self, lastIndex):
         if self.step == "main":
-            if (self.historic['EMA20EVOL'][lastIndex] == -2 or (self.historic['EMA20EVOL'][lastIndex] >= 1 and self.historic['RSI'][lastIndex] > 80)) and self.wallet.trade > 0.001:
+            if (self.historic['EMA20EVOL'][lastIndex] == -2 or (self.historic['EMA20EVOL'][lastIndex] >= 1 and self.historic['RSI'][lastIndex] > 80)) and self.wallet.hasPercentTrade(10, self.historic['close'][lastIndex]):
                 return 100
         return 0

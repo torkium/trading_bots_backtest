@@ -2,11 +2,12 @@ import pandas as pd
 import requests
 import oanda_config
 from datetime import datetime
+from decimal import *
 
 class Oanda:
     historic = {}
 
-    feesRate = 0.1/100
+    feesRate = Decimal(0.1/100)
 
     session = None
 
