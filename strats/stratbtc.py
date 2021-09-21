@@ -41,12 +41,12 @@ class StratBtc:
             if buyCondition > 0:
                 #Execute buy order
                 self.wallet.addTransaction(Orders.setOrderBuy(self.wallet, buyCondition, self.historic['open'][index], Exchange.feesRate, index), index)
-                print(self.wallet.transactions[index].toString())
+                print(self.wallet.transactions[index].toString(self.wallet.baseCurrency, self.wallet.tradingCurrency))
             #Check sell condition
             elif sellCondition > 0:
                 #Execute sell order
                 self.wallet.addTransaction(Orders.setOrderSell(self.wallet, sellCondition, self.historic['open'][index], Exchange.feesRate, index), index)
-                print(self.wallet.transactions[index].toString())
+                print(self.wallet.transactions[index].toString(self.wallet.baseCurrency, self.wallet.tradingCurrency))
                 print(self.wallet.toString())
             lastIndex = index
         #Close the wallet at the end

@@ -4,6 +4,7 @@ from exchanges.oanda import Oanda as Exchange
 from classes.indicators import Indicators
 from classes.wallet import Wallet
 from classes.orders import Orders
+from classes.lot import Lot
 import pandas as pd
 import csv
 
@@ -21,7 +22,7 @@ class StratForex:
     orderInProgress = None
     leverage = None
 
-    def __init__(self, baseCurrency, tradingCurrency, base, trade, mainTimeFrame, leverage, startDate, endDate=None):
+    def __init__(self, baseCurrency, tradingCurrency, base, trade, mainTimeFrame, maxLeverage, startDate, endDate=None):
         self.historic = Exchange.getHistoric(tradingCurrency, baseCurrency, mainTimeFrame, startDate, endDate)
         self.wallet = Wallet(baseCurrency, tradingCurrency, base, trade, self.historic['close'].iloc[0])
         Indicators.setIndicators(self.historic)
@@ -30,7 +31,7 @@ class StratForex:
         self.base = base
         self.trade = trade
         self.mainTimeFrame = mainTimeFrame
-        self.leverage = leverage
+        self.maxLeverage = maxLeverage
         self.startDate = startDate
         self.endDate = endDate
 
@@ -44,19 +45,21 @@ class StratForex:
                 shortCondition = self.shortOpenConditions(lastIndex)
                 if longCondition > 0:
                     #Open Long order
-                    self.orderInProgress = Orders.setOrderLong(self.wallet, longCondition, self.leverage, self.historic['open'][index], Exchange.feesRate, index)
+                    lot = Lot(self.wallet.base * longCondition / 100, self.maxLeverage)
+                    self.orderInProgress = Orders.setOrderLong(lot.amount, lot.leverage, self.historic['open'][index], Exchange.feesRate, index)
                     self.wallet.addTransaction(self.orderInProgress, index)
-                    print(self.wallet.transactions[index].toString())
+                    print(self.wallet.transactions[index].toString(self.wallet.baseCurrency, self.wallet.tradingCurrency))
                 if longCondition == 0 and shortCondition > 0:
                     #Open Short order
-                    self.orderInProgress = Orders.setOrderShort(self.wallet, shortCondition, self.leverage, self.historic['open'][index], Exchange.feesRate, index)
+                    lot = Lot(self.wallet.base * shortCondition / 100, self.maxLeverage)
+                    self.orderInProgress = Orders.setOrderShort(lot.amount, lot.leverage, self.historic['open'][index], Exchange.feesRate, index)
                     self.wallet.addTransaction(self.orderInProgress, index)
-                    print(self.wallet.transactions[index].toString())
+                    print(self.wallet.transactions[index].toString(self.wallet.baseCurrency, self.wallet.tradingCurrency))
             else:
                 if Orders.isLiquidated(self.historic['high'][index], self.historic['low'][index], self.orderInProgress):
                     self.wallet.addTransaction(Orders.liquidatePosition(self.wallet, self.orderInProgress, Exchange.feesRate, index), index)
                     self.orderInProgress = None
-                    print(self.wallet.transactions[index].toString())
+                    print(self.wallet.transactions[index].toString(self.wallet.baseCurrency, self.wallet.tradingCurrency))
                     print(self.wallet.toString())
                     lastIndex = index
                     if self.wallet.base > 0:
@@ -64,16 +67,16 @@ class StratForex:
                     else:
                         break
                 if self.orderInProgress.action == "LONG" and self.longCloseConditions(lastIndex):
-                    self.wallet.addTransaction(Orders.closeLongPosition(self.wallet, self.historic['open'][index], Exchange.feesRate, self.orderInProgress, index), index)
+                    self.wallet.addTransaction(Orders.closeLongPosition(self.historic['open'][index], Exchange.feesRate, self.orderInProgress, index), index)
                     self.orderInProgress = None
-                    print(self.wallet.transactions[index].toString())
+                    print(self.wallet.transactions[index].toString(self.wallet.baseCurrency, self.wallet.tradingCurrency))
                     print(self.wallet.toString())
                     lastIndex = index
                     continue
                 if self.orderInProgress.action == "SHORT" and self.shortCloseConditions(lastIndex):
-                    self.wallet.addTransaction(Orders.closeShortPosition(self.wallet, self.historic['open'][index], Exchange.feesRate, self.orderInProgress, index), index)
+                    self.wallet.addTransaction(Orders.closeShortPosition(self.historic['open'][index], Exchange.feesRate, self.orderInProgress, index), index)
                     self.orderInProgress = None
-                    print(self.wallet.transactions[index].toString())
+                    print(self.wallet.transactions[index].toString(self.wallet.baseCurrency, self.wallet.tradingCurrency))
                     print(self.wallet.toString())
                     lastIndex = index
                     continue
@@ -81,9 +84,9 @@ class StratForex:
         #Close the wallet at the end
         if self.orderInProgress != None:
             if self.orderInProgress.action == "LONG":
-                self.wallet.addTransaction(Orders.closeLongPosition(self.wallet, self.historic['open'].iloc[-1], Exchange.feesRate, self.orderInProgress, lastIndex), lastIndex)
+                self.wallet.addTransaction(Orders.closeLongPosition(self.historic['open'].iloc[-1], Exchange.feesRate, self.orderInProgress, lastIndex), lastIndex)
             if self.orderInProgress.action == "SHORT":
-                self.wallet.addTransaction(Orders.closeShortPosition(self.wallet, self.historic['open'].iloc[-1], Exchange.feesRate, self.orderInProgress, lastIndex), lastIndex)
+                self.wallet.addTransaction(Orders.closeShortPosition(self.historic['open'].iloc[-1], Exchange.feesRate, self.orderInProgress, lastIndex), lastIndex)
         self.wallet.setEnd(self.historic['close'].iloc[-1])
 
         print(self.wallet.toString())

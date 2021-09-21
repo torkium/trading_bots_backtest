@@ -44,19 +44,19 @@ class StratBtcFuture:
                 shortCondition = self.shortOpenConditions(lastIndex)
                 if longCondition > 0:
                     #Open Long order
-                    self.orderInProgress = Orders.setOrderLong(self.wallet, longCondition, self.leverage, self.historic['open'][index], Exchange.feesRateFuture, index)
+                    self.orderInProgress = Orders.setOrderLong(self.wallet.base * longCondition / 100, self.leverage, self.historic['open'][index], Exchange.feesRateFuture, index)
                     self.wallet.addTransaction(self.orderInProgress, index)
-                    print(self.wallet.transactions[index].toString())
+                    print(self.wallet.transactions[index].toString(self.wallet.baseCurrency, self.wallet.tradingCurrency))
                 if longCondition == 0 and shortCondition > 0:
                     #Open Short order
-                    self.orderInProgress = Orders.setOrderShort(self.wallet, shortCondition, self.leverage, self.historic['open'][index], Exchange.feesRateFuture, index)
+                    self.orderInProgress = Orders.setOrderShort(self.wallet.base * shortCondition / 100, self.leverage, self.historic['open'][index], Exchange.feesRateFuture, index)
                     self.wallet.addTransaction(self.orderInProgress, index)
-                    print(self.wallet.transactions[index].toString())
+                    print(self.wallet.transactions[index].toString(self.wallet.baseCurrency, self.wallet.tradingCurrency))
             else:
-                if Orders.isLiquidated(self.wallet, self.historic['high'][index], self.historic['low'][index], self.orderInProgress, Exchange.feesRateFuture):
-                    self.wallet.addTransaction(Orders.liquidatePosition(self.wallet, self.orderInProgress, Exchange.feesRateFuture, index), index)
+                if Orders.isLiquidated(self.historic['high'][index], self.historic['low'][index], self.orderInProgress):
+                    self.wallet.addTransaction(Orders.liquidatePosition(self.orderInProgress, Exchange.feesRateFuture, index), index)
                     self.orderInProgress = None
-                    print(self.wallet.transactions[index].toString())
+                    print(self.wallet.transactions[index].toString(self.wallet.baseCurrency, self.wallet.tradingCurrency))
                     print(self.wallet.toString())
                     lastIndex = index
                     if self.wallet.base > 0:
@@ -64,16 +64,16 @@ class StratBtcFuture:
                     else:
                         break
                 if self.orderInProgress.action == "LONG" and self.longCloseConditions(lastIndex):
-                    self.wallet.addTransaction(Orders.closeLongPosition(self.wallet, self.historic['open'][index], Exchange.feesRateFuture, self.orderInProgress, index), index)
+                    self.wallet.addTransaction(Orders.closeLongPosition(self.historic['open'][index], Exchange.feesRateFuture, self.orderInProgress, index), index)
                     self.orderInProgress = None
-                    print(self.wallet.transactions[index].toString())
+                    print(self.wallet.transactions[index].toString(self.wallet.baseCurrency, self.wallet.tradingCurrency))
                     print(self.wallet.toString())
                     lastIndex = index
                     continue
                 if self.orderInProgress.action == "SHORT" and self.shortCloseConditions(lastIndex):
-                    self.wallet.addTransaction(Orders.closeShortPosition(self.wallet, self.historic['open'][index], Exchange.feesRateFuture, self.orderInProgress, index), index)
+                    self.wallet.addTransaction(Orders.closeShortPosition(self.historic['open'][index], Exchange.feesRateFuture, self.orderInProgress, index), index)
                     self.orderInProgress = None
-                    print(self.wallet.transactions[index].toString())
+                    print(self.wallet.transactions[index].toString(self.wallet.baseCurrency, self.wallet.tradingCurrency))
                     print(self.wallet.toString())
                     lastIndex = index
                     continue
@@ -81,9 +81,9 @@ class StratBtcFuture:
         #Close the wallet at the end
         if self.orderInProgress != None:
             if self.orderInProgress.action == "LONG":
-                self.wallet.addTransaction(Orders.closeLongPosition(self.wallet, self.historic['open'].iloc[-1], Exchange.feesRateFuture, self.orderInProgress, lastIndex), lastIndex)
+                self.wallet.addTransaction(Orders.closeLongPosition(self.historic['open'].iloc[-1], Exchange.feesRateFuture, self.orderInProgress, lastIndex), lastIndex)
             if self.orderInProgress.action == "SHORT":
-                self.wallet.addTransaction(Orders.closeShortPosition(self.wallet, self.historic['open'].iloc[-1], Exchange.feesRateFuture, self.orderInProgress, lastIndex), lastIndex)
+                self.wallet.addTransaction(Orders.closeShortPosition(self.historic['open'].iloc[-1], Exchange.feesRateFuture, self.orderInProgress, lastIndex), lastIndex)
         self.wallet.setEnd(self.historic['close'].iloc[-1])
 
         print(self.wallet.toString())
