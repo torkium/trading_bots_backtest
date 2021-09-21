@@ -12,7 +12,7 @@ class CSVHistory:
         fileName = fileName.replace(" ", "").replace(":","").replace("-","")
         f = open('./' + fileName, 'w', encoding='UTF8', newline="")
         writer = csv.writer(f, delimiter=';')
-        headers = ['datetime', 'action', 'amount', 'fees', 'wallet_from_base', 'wallet_from_trade', 'wallet_to_base', 'wallet_to_trade', 'open', 'high', 'low', 'close', 'volume']
+        headers = ['datetime', 'action', 'amount', 'fees', 'wallet_from_base', 'wallet_from_trade', 'wallet_to_base', 'wallet_to_trade', 'start_trade_amount', 'final_trade_amount', 'trade_state (%)', 'open', 'high', 'low', 'close', 'volume']
         for key in Indicators.INDICATORS_KEYS:
             headers.append(key)
         writer.writerow(headers)
@@ -24,6 +24,9 @@ class CSVHistory:
         headers.remove('wallet_from_trade')
         headers.remove('wallet_to_base')
         headers.remove('wallet_to_trade')
+        headers.remove('trade_state (%)')
+        headers.remove('start_trade_amount')
+        headers.remove('final_trade_amount')
         for index, row in historic.iterrows():
             line = []
             line.append(index)
@@ -35,7 +38,19 @@ class CSVHistory:
                 line.append(str(wallet.history[index]["from"]["trade"]).replace(".",","))
                 line.append(str(wallet.history[index]["to"]["base"]).replace(".",","))
                 line.append(str(wallet.history[index]["to"]["trade"]).replace(".",","))
+                line.append(str(wallet.transactions[index].amount * wallet.transactions[index].price).replace(".",","))
+                if wallet.transactions[index].finalAmount != None:
+                    line.append(str(wallet.transactions[index].finalAmount).replace(".",","))
+                else:
+                    line.append("")
+                if wallet.transactions[index].finalState != None:
+                    line.append(str(wallet.transactions[index].finalState).replace(".",","))
+                else:
+                    line.append("")
             else:
+                line.append("")
+                line.append("")
+                line.append("")
                 line.append("")
                 line.append("")
                 line.append("")

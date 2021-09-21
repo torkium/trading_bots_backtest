@@ -31,7 +31,6 @@ class Wallet:
 
     def addTransaction(self, transaction, index):
         self.totalFees += transaction.fees
-        self.transactions[index] = transaction
         self.history[index] = {"from":{"base":self.base,"trade":self.trade},"to":{"base":self.base,"trade":self.trade}}
         if transaction.action == "buy":
             self.trade += Decimal(transaction.amount)
@@ -45,15 +44,26 @@ class Wallet:
         if transaction.action == "SHORT":
             self.base -= transaction.fees
             self.shortAmount += transaction.amount
-        if transaction.action == "CLOSE" or transaction.action == "LIQUIDATE":
+        if transaction.action == "CLOSE":
             pr_change = transaction.price - self.last_transaction.price
             if self.last_transaction.action == "SHORT":
                 pr_change *= -1
-            self.base += transaction.amount*pr_change*transaction.leverage - transaction.fees
+            gain = transaction.amount*pr_change*transaction.leverage - transaction.fees
+            transaction.finalAmount = transaction.amount * transaction.price + gain 
+            transaction.finalState = gain*100/(self.last_transaction.amount*self.last_transaction.price)
+            self.base += gain
             if self.base<0:
                 self.base = 0
             self.longAmount = 0
             self.shortAmount = 0
+        if transaction.action == "LIQUIDATE":
+            self.base -= self.last_transaction.amount
+            if self.base<0:
+                self.base = 0
+            self.longAmount = 0
+            self.shortAmount = 0
+            transaction.finalState = -100
+        self.transactions[index] = transaction
         self.history[index]['to']["base"] = self.base
         self.history[index]['to']["trade"] = self.trade
         self.last_transaction = transaction

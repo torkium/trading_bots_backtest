@@ -8,6 +8,8 @@ class Transaction:
     fees = False
     leverage = False
     liquidationPrice = False
+    finalAmount = None
+    finalState = None
 
     def __init__(self, time, amount, price, action, fees, leverage=1, liquidationPrice=None):
         self.time = time
