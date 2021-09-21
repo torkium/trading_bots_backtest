@@ -22,7 +22,11 @@ class Orders:
         fees =  to_long * leverage * Decimal(feesRate)
         to_long -= fees
         to_long = to_long / Decimal(price)
-        return Transaction(time, to_long, price, "LONG", fees, wallet.baseCurrency, wallet.tradingCurrency, leverage)
+        
+        iniPrice = Decimal(price) + feesRate * Decimal(price)
+        tokenAmount = to_long * Decimal(leverage) / Decimal(price)
+        liquidationPrice = iniPrice - (to_long/tokenAmount)
+        return Transaction(time, to_long, price, "LONG", fees, wallet.baseCurrency, wallet.tradingCurrency, leverage, liquidationPrice)
     
     @staticmethod
     def setOrderShort(wallet, percent, leverage, price, feesRate, time):
@@ -30,7 +34,11 @@ class Orders:
         fees =  to_short * leverage * Decimal(feesRate)
         to_short -= fees
         to_short = to_short / Decimal(price)
-        return Transaction(time, to_short, price, "SHORT", fees, wallet.baseCurrency, wallet.tradingCurrency, leverage)
+        
+        iniPrice = Decimal(price) - feesRate * Decimal(price)
+        tokenAmount = to_short * Decimal(leverage) / Decimal(price)
+        liquidationPrice = iniPrice + (to_short/tokenAmount)
+        return Transaction(time, to_short, price, "SHORT", fees, wallet.baseCurrency, wallet.tradingCurrency, leverage, liquidationPrice)
     
     @staticmethod
     def closeLongPosition(wallet, closePrice, feesRate, transaction, time):
@@ -46,22 +54,13 @@ class Orders:
     
     @staticmethod
     def liquidatePosition(wallet, transaction, feesRate, time):
-        tokenAmount = Decimal((wallet.base * Decimal(transaction.leverage)) / Decimal(transaction.price))
-        if transaction.action == "LONG":
-            liquidationPrice = transaction.price + transaction.fees - Decimal(wallet.base/tokenAmount)
-        if transaction.action == "SHORT":
-            liquidationPrice = transaction.price - transaction.fees + Decimal(wallet.base/tokenAmount)
-        fees = feesRate * liquidationPrice
-        return Transaction(time, transaction.amount, liquidationPrice, "LIQUIDATE", fees, wallet.baseCurrency, wallet.tradingCurrency, transaction.leverage)
+        fees = feesRate * transaction.liquidationPrice
+        return Transaction(time, transaction.amount, transaction.liquidationPrice, "LIQUIDATE", fees, wallet.baseCurrency, wallet.tradingCurrency, transaction.leverage)
     
     @staticmethod
-    def isLiquidated(wallet, price_high, price_low, transaction, feesRate):
+    def isLiquidated(price_high, price_low, transaction):
         if transaction.action == "LONG":
-            tokenAmount = Decimal((wallet.base * Decimal(transaction.leverage)) / Decimal(transaction.price))
-            longLiquidationPrice = transaction.price + transaction.fees - Decimal(wallet.base/tokenAmount)
-            return price_low<=longLiquidationPrice
+            return price_low<=transaction.liquidationPrice
         if transaction.action == "SHORT":
-            tokenAmount = Decimal((wallet.base * Decimal(transaction.leverage)) / Decimal(transaction.price))
-            longLiquidationPrice = transaction.price - transaction.fees + Decimal(wallet.base/tokenAmount)
-            return price_high>=longLiquidationPrice
+            return price_high>=transaction.liquidationPrice
         return False

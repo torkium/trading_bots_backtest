@@ -22,6 +22,8 @@ class Indicators:
         historic['SMATREND'] = Indicators.setMainTrend("EMA", historic)
         historic['RSI'] = ta.momentum.RSIIndicator(historic['close'], window=14).rsi()
         historic['RSIEVOL'] = Indicators.setEvol('RSI', historic)
+        historic['PRICEEVOL'] = Indicators.setEvol('close', historic)
+        historic['VOLUMEEVOL'] = Indicators.setEvol('volume', historic)
         historic['MACD'] = ta.trend.MACD(historic['close']).macd()
         historic['MACDDIFF'] = ta.trend.MACD(historic['close']).macd_diff()
         historic['MACDSIGN'] = ta.trend.MACD(historic['close']).macd_signal()

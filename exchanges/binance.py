@@ -6,6 +6,7 @@ class Binance:
     historic = {}
 
     feesRate = Decimal(0.1/100)
+    feesRateFuture = Decimal(0.04/100)
 
     @staticmethod
     def getHistoric(tradingCurrency, baseCurrency, timeframe, startDate, endDate=None):
