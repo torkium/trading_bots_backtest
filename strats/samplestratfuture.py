@@ -2,7 +2,7 @@ from core.abstractstratfutures import AbstractStratFutures
 from indicators.indicators import Indicators
 from core.csvhistory import CsvHistory
 
-class StratBtcFuture(AbstractStratFutures):
+class SampleStratFuture(AbstractStratFutures):
 
     def __init__(self, exchange, baseCurrency, tradingCurrency, base, trade, mainTimeFrame, leverage, startDate, endDate=None):
         super().__init__(exchange, baseCurrency, tradingCurrency, base, trade, mainTimeFrame, leverage, startDate, endDate=None)
@@ -22,7 +22,6 @@ class StratBtcFuture(AbstractStratFutures):
                 return 50
         return 0
 
-    #To determine long close condition
     def longCloseConditions(self, lastIndex):
         """
         To determine long close.
@@ -35,7 +34,6 @@ class StratBtcFuture(AbstractStratFutures):
                 return 100
         return 0
         
-    #To determine short open condition
     def shortOpenConditions(self, lastIndex):
         """
         To determine short condition.
@@ -46,7 +44,6 @@ class StratBtcFuture(AbstractStratFutures):
                 return 50
         return 0
     
-    #To determine short close condition
     def shortCloseConditions(self, lastIndex):
         """
         To determine short close.

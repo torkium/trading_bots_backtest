@@ -1,7 +1,7 @@
 import ta
 import pandas as pd
 
-class Indicators:
+class AbstractIndicators:
     
     INDICATORS_KEYS = []
 
@@ -11,28 +11,28 @@ class Indicators:
         for period in periods:
             period_string = str(period)
             historic['SMA' + period_string] = ta.trend.sma_indicator(historic['close'], period)
-            historic['SMA' + period_string + 'EVOL'] = Indicators.setEvol('SMA' + period_string, historic)
+            historic['SMA' + period_string + 'EVOL'] = AbstractIndicators.setEvol('SMA' + period_string, historic)
             historic['EMA' + period_string] = ta.trend.ema_indicator(historic['close'], period)
-            historic['EMA' + period_string + 'EVOL'] = Indicators.setEvol('EMA' + period_string, historic)
-            Indicators.INDICATORS_KEYS.append('SMA' + period_string)
-            Indicators.INDICATORS_KEYS.append('SMA' + period_string + 'EVOL')
-            Indicators.INDICATORS_KEYS.append('EMA' + period_string)
-            Indicators.INDICATORS_KEYS.append('EMA' + period_string + 'EVOL')
-        historic['EMATREND'] = Indicators.setMainTrend("EMA", historic)
-        historic['SMATREND'] = Indicators.setMainTrend("EMA", historic)
+            historic['EMA' + period_string + 'EVOL'] = AbstractIndicators.setEvol('EMA' + period_string, historic)
+            AbstractIndicators.INDICATORS_KEYS.append('SMA' + period_string)
+            AbstractIndicators.INDICATORS_KEYS.append('SMA' + period_string + 'EVOL')
+            AbstractIndicators.INDICATORS_KEYS.append('EMA' + period_string)
+            AbstractIndicators.INDICATORS_KEYS.append('EMA' + period_string + 'EVOL')
+        historic['EMATREND'] = AbstractIndicators.setMainTrend("EMA", historic)
+        historic['SMATREND'] = AbstractIndicators.setMainTrend("EMA", historic)
         historic['RSI'] = ta.momentum.RSIIndicator(historic['close'], window=14).rsi()
-        historic['RSIEVOL'] = Indicators.setEvol('RSI', historic)
-        historic['PRICEEVOL'] = Indicators.setEvol('close', historic)
-        historic['VOLUMEEVOL'] = Indicators.setEvol('volume', historic)
+        historic['RSIEVOL'] = AbstractIndicators.setEvol('RSI', historic)
+        historic['PRICEEVOL'] = AbstractIndicators.setEvol('close', historic)
+        historic['VOLUMEEVOL'] = AbstractIndicators.setEvol('volume', historic)
         historic['MACD'] = ta.trend.MACD(historic['close']).macd()
         historic['MACDDIFF'] = ta.trend.MACD(historic['close']).macd_diff()
         historic['MACDSIGN'] = ta.trend.MACD(historic['close']).macd_signal()
-        Indicators.INDICATORS_KEYS.append('EMATREND')
-        Indicators.INDICATORS_KEYS.append('SMATREND')
-        Indicators.INDICATORS_KEYS.append('RSI')
-        Indicators.INDICATORS_KEYS.append('MACD')
-        Indicators.INDICATORS_KEYS.append('MACDDIFF')
-        Indicators.INDICATORS_KEYS.append('MACDSIGN')
+        AbstractIndicators.INDICATORS_KEYS.append('EMATREND')
+        AbstractIndicators.INDICATORS_KEYS.append('SMATREND')
+        AbstractIndicators.INDICATORS_KEYS.append('RSI')
+        AbstractIndicators.INDICATORS_KEYS.append('MACD')
+        AbstractIndicators.INDICATORS_KEYS.append('MACDDIFF')
+        AbstractIndicators.INDICATORS_KEYS.append('MACDSIGN')
     
     @staticmethod
     def setEvol(key_from, historic):
