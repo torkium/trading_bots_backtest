@@ -12,7 +12,7 @@ class AbstractStratFutures(AbstractStrat):
         self.leverage = leverage
         self.walletInPosition = 0
 
-    def apply(self):
+    def backtest(self):
         #Used to check previous period, and not current period (because not closed)
         lastIndex = self.historic[self.mainTimeFrame].first_valid_index()
         #For each historical entry

@@ -42,7 +42,7 @@ class AbstractStrat:
         self.maxDrawdown = 0
         self.totalFees = 0
 
-    def apply(self):
+    def backtest(self):
         return None
 
     def getFinalLog(self):

@@ -8,8 +8,8 @@ class StratBtcFuture(AbstractStratFutures):
         super().__init__(exchange, baseCurrency, tradingCurrency, base, trade, mainTimeFrame, leverage, startDate, endDate=None)
         Indicators.setIndicators(self.historic[self.mainTimeFrame])
 
-    def apply(self):
-        super().apply()
+    def backtest(self):
+        super().backtest()
         CsvHistory.write(self.historic[self.mainTimeFrame], Indicators.INDICATORS_KEYS, self.wallet, self.transactions, self.history, self.startDate, self.endDate)
 
     def longOpenConditions(self,lastIndex):
