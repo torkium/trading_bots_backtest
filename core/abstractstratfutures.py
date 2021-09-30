@@ -35,8 +35,7 @@ class AbstractStratFutures(AbstractStrat):
                     self.addTransaction(self.orderInProgress, self.wallet, index)
                     print(self.transactions[index])
             else:
-                #TODO : liquidateFees need to be calculated correctly
-                liquidateFees =  self.orderInProgress.amount * self.orderInProgress.leverage * Decimal(self.exchange.feesRateFuture)
+                liquidateFees =  (self.orderInProgress.amount/self.orderInProgress.price * self.orderInProgress.liquidationPrice) * self.orderInProgress.leverage * Decimal(self.exchange.feesRateFuture)
                 if self.orderInProgress.isLiquidated(self.historic[self.mainTimeFrame]['high'][lastIndex], self.historic[self.mainTimeFrame]['low'][lastIndex], liquidateFees):
                     self.addTransaction(self.orderInProgress.liquidate(liquidateFees, index), self.wallet, index)
                     self.orderInProgress = None
