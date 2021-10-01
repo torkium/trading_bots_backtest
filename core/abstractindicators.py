@@ -12,12 +12,16 @@ class AbstractIndicators:
             period_string = str(period)
             historic['SMA' + period_string] = ta.trend.sma_indicator(historic['close'], period)
             historic['SMA' + period_string + 'EVOL'] = AbstractIndicators.setEvol('SMA' + period_string, historic)
+            historic['SMA' + period_string + 'SLOPE'] = AbstractIndicators.setSlope('SMA' + period_string, historic)
             historic['EMA' + period_string] = ta.trend.ema_indicator(historic['close'], period)
             historic['EMA' + period_string + 'EVOL'] = AbstractIndicators.setEvol('EMA' + period_string, historic)
+            historic['EMA' + period_string + 'SLOPE'] = AbstractIndicators.setSlope('EMA' + period_string, historic)
             AbstractIndicators.INDICATORS_KEYS.append('SMA' + period_string)
             AbstractIndicators.INDICATORS_KEYS.append('SMA' + period_string + 'EVOL')
+            AbstractIndicators.INDICATORS_KEYS.append('SMA' + period_string + 'SLOPE')
             AbstractIndicators.INDICATORS_KEYS.append('EMA' + period_string)
             AbstractIndicators.INDICATORS_KEYS.append('EMA' + period_string + 'EVOL')
+            AbstractIndicators.INDICATORS_KEYS.append('EMA' + period_string + 'SLOPE')
         historic['EMATREND'] = AbstractIndicators.setMainTrend("EMA", historic)
         historic['SMATREND'] = AbstractIndicators.setMainTrend("EMA", historic)
         historic['RSI'] = ta.momentum.RSIIndicator(historic['close'], window=14).rsi()
@@ -54,6 +58,19 @@ class AbstractIndicators:
             EVOL.append(lastEvol)
 
         return pd.Series(EVOL, index = historic.index)
+    
+    @staticmethod
+    def setSlope(key_from, historic):
+        SLOPE = []
+        lastIndex = None
+        slope = 0
+        for index in historic.index:
+            if lastIndex != None:
+                slope = 100 * (historic[key_from][index] - historic[key_from][lastIndex]) / historic[key_from][lastIndex]
+            lastIndex = index
+            SLOPE.append(slope)
+
+        return pd.Series(SLOPE, index = historic.index)
     
     @staticmethod
     def setMainTrend(type, historic):

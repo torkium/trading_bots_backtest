@@ -22,32 +22,54 @@ class AbstractStrat:
     maxDrawdown = None
     totalFees = None
 
-    def __init__(self, exchange, baseCurrency, tradingCurrency, base, trade, mainTimeFrame, startDate, endDate=None):
+    def __init__(self, exchange, baseCurrency, tradingCurrency, base, trade, mainTimeFrame):
         self.exchange = exchange
         self.mainTimeFrame = mainTimeFrame
-        self.historic = {self.mainTimeFrame: self.exchange.getHistoric(tradingCurrency, baseCurrency, mainTimeFrame, startDate, endDate)}
         self.wallet = Wallet(baseCurrency, tradingCurrency, base, trade)
         self.baseCurrency = baseCurrency
         self.tradingCurrency = tradingCurrency
         self.base = base
         self.trade = trade
-        self.startDate = startDate
-        self.endDate = endDate
         self.transactions = {}
         self.history = {}
-        self.startWallet = self.wallet.getTotalAmount(self.historic[self.mainTimeFrame]['open'].iloc[0])
-        self.minWallet = self.startWallet
-        self.maxWallet = self.startWallet
         self.currentDrawdown = 0
         self.maxDrawdown = 0
         self.totalFees = 0
 
     def backtest(self):
+        """
+        To launch backtest on strat
+        """
         return None
+
+    def initBacktest(self, startDate, endDate=None):
+        """
+        To launch backtest on strat
+        """
+        self.historic = {self.mainTimeFrame: self.exchange.getHistoric(self.tradingCurrency, self.baseCurrency, self.mainTimeFrame, startDate, endDate)}
+        self.startDate = startDate
+        self.endDate = endDate
+        self.startWallet = self.wallet.getTotalAmount(self.historic[self.mainTimeFrame]['open'].iloc[0])
+        self.minWallet = self.startWallet
+        self.maxWallet = self.startWallet
+        return None
+
+    def demo(self):
+        """
+        To launch strat in live demo mode
+        """
+        return None
+
+    def run(self):
+        """
+        To launch strat in live real mode
+        """
+        return None
+
 
     def getFinalLog(self):
         finalLog = "Wallet From " + str(self.startWallet) + " " + self.wallet.baseCurrency + " to " + str(self.wallet.getTotalAmount(self.historic[self.mainTimeFrame]['close'].iloc[-1])) + " " + self.wallet.baseCurrency + " (" + str((self.wallet.getTotalAmount(self.historic[self.mainTimeFrame]['close'].iloc[-1])-self.startWallet)*100/self.startWallet) + "%)\n"
-        finalLog += "Total fees : " + str(self.totalFees) + "\n"
+        finalLog += "Total fees : " + str(self.totalFees) + " " + self.wallet.baseCurrency + "\n"
         finalLog += "Buy & hold From " + str(self.startWallet) + " " + self.wallet.baseCurrency + " to " + str(self.startWallet * self.historic[self.mainTimeFrame]['close'].iloc[-1] / self.historic[self.mainTimeFrame]['open'].iloc[0]) + " " + self.wallet.baseCurrency + " (" + str((self.startWallet * self.historic[self.mainTimeFrame]['close'].iloc[-1] / self.historic[self.mainTimeFrame]['open'].iloc[0]-self.startWallet)*100/self.startWallet) + "%)\n"
         transactions_type = {}
         for key in self.transactions:
@@ -56,9 +78,9 @@ class AbstractStrat:
             transactions_type[self.transactions[key].type] += 1
         for key in transactions_type:
             finalLog += key + " : " + str(transactions_type[key]) + "\n"
-        finalLog += "Min Wallet : " + str(self.minWallet) + "\n"
-        finalLog += "Max Wallet : " + str(self.maxWallet) + "\n"
-        finalLog += "Max Drawdown : " + str(self.maxDrawdown)
+        finalLog += "Min Wallet : " + str(self.minWallet) + " " + self.wallet.baseCurrency + "\n"
+        finalLog += "Max Wallet : " + str(self.maxWallet) + " " + self.wallet.baseCurrency + "\n"
+        finalLog += "Max Drawdown : " + str(self.maxDrawdown) + "%"
         return finalLog
 
     def addTransaction(self, transaction, wallet, index):

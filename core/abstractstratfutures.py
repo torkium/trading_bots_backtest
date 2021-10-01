@@ -7,8 +7,8 @@ class AbstractStratFutures(AbstractStrat):
     orderInProgress = None
     walletInPosition = None
 
-    def __init__(self, exchange, baseCurrency, tradingCurrency, base, trade, mainTimeFrame, leverage, startDate, endDate=None):
-        super().__init__(exchange, baseCurrency, tradingCurrency, base, trade, mainTimeFrame, startDate, endDate=None)
+    def __init__(self, exchange, baseCurrency, tradingCurrency, base, trade, mainTimeFrame, leverage):
+        super().__init__(exchange, baseCurrency, tradingCurrency, base, trade, mainTimeFrame)
         self.leverage = leverage
         self.walletInPosition = 0
 

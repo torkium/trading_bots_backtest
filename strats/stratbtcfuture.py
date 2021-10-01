@@ -4,11 +4,11 @@ from core.csvhistory import CsvHistory
 
 class StratBtcFuture(AbstractStratFutures):
 
-    def __init__(self, exchange, baseCurrency, tradingCurrency, base, trade, mainTimeFrame, leverage, startDate, endDate=None):
-        super().__init__(exchange, baseCurrency, tradingCurrency, base, trade, mainTimeFrame, leverage, startDate, endDate=None)
-        Indicators.setIndicators(self.historic[self.mainTimeFrame])
+    def __init__(self, exchange, baseCurrency, tradingCurrency, base, trade, mainTimeFrame, leverage):
+        super().__init__(exchange, baseCurrency, tradingCurrency, base, trade, mainTimeFrame, leverage)
 
     def backtest(self):
+        Indicators.setIndicators(self.historic[self.mainTimeFrame])
         super().backtest()
         CsvHistory.write(self.historic[self.mainTimeFrame], Indicators.INDICATORS_KEYS, self.wallet, self.transactions, self.history, self.startDate, self.endDate)
 
