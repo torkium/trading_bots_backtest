@@ -23,6 +23,7 @@ class AbstractStrat:
     totalFees = None
 
     def __init__(self, exchange, baseCurrency, tradingCurrency, base, trade, mainTimeFrame):
+        print("AbstractStrat init")
         self.exchange = exchange
         self.mainTimeFrame = mainTimeFrame
         self.wallet = Wallet(baseCurrency, tradingCurrency, base, trade)
@@ -58,19 +59,20 @@ class AbstractStrat:
         """
         To launch strat in live demo mode
         """
-        return None
+        pass
 
-    def run(self):
-        """
-        To launch strat in live real mode
-        """
-        return None
+    # def run(self, apiKey, apiSecret):
+    #     """
+    #     To launch strat in live real mode
+    #     """
+    #     pass
+    #     return None
 
 
     def getFinalLog(self):
-        finalLog = "Wallet From " + str(self.startWallet) + " " + self.wallet.baseCurrency + " to " + str(self.wallet.getTotalAmount(self.historic[self.mainTimeFrame]['close'].iloc[-1])) + " " + self.wallet.baseCurrency + " (" + str((self.wallet.getTotalAmount(self.historic[self.mainTimeFrame]['close'].iloc[-1])-self.startWallet)*100/self.startWallet) + "%)\n"
+        finalLog = "Wallet From " + str(self.startWallet) + " " + self.wallet.baseCurrency + " to " + str(self.wallet.getTotalAmount(self.historic[self.mainTimeFrame]['close'].iloc[-1])) + " " + self.wallet.baseCurrency + " (" + str(round((self.wallet.getTotalAmount(self.historic[self.mainTimeFrame]['close'].iloc[-1])-self.startWallet)*100/self.startWallet, 2)) + "%)\n"
         finalLog += "Total fees : " + str(self.totalFees) + " " + self.wallet.baseCurrency + "\n"
-        finalLog += "Buy & hold From " + str(self.startWallet) + " " + self.wallet.baseCurrency + " to " + str(self.startWallet * self.historic[self.mainTimeFrame]['close'].iloc[-1] / self.historic[self.mainTimeFrame]['open'].iloc[0]) + " " + self.wallet.baseCurrency + " (" + str((self.startWallet * self.historic[self.mainTimeFrame]['close'].iloc[-1] / self.historic[self.mainTimeFrame]['open'].iloc[0]-self.startWallet)*100/self.startWallet) + "%)\n"
+        finalLog += "Buy & hold From " + str(self.startWallet) + " " + self.wallet.baseCurrency + " to " + str(self.startWallet * self.historic[self.mainTimeFrame]['close'].iloc[-1] / self.historic[self.mainTimeFrame]['open'].iloc[0]) + " " + self.wallet.baseCurrency + " (" + str(round((self.startWallet * self.historic[self.mainTimeFrame]['close'].iloc[-1] / self.historic[self.mainTimeFrame]['open'].iloc[0]-self.startWallet)*100/self.startWallet, 2)) + "%)\n"
         transactions_type = {}
         for key in self.transactions:
             if not self.transactions[key].type in transactions_type:
@@ -80,7 +82,7 @@ class AbstractStrat:
             finalLog += key + " : " + str(transactions_type[key]) + "\n"
         finalLog += "Min Wallet : " + str(self.minWallet) + " " + self.wallet.baseCurrency + "\n"
         finalLog += "Max Wallet : " + str(self.maxWallet) + " " + self.wallet.baseCurrency + "\n"
-        finalLog += "Max Drawdown : " + str(self.maxDrawdown) + "%"
+        finalLog += "Max Drawdown : " + str(round(self.maxDrawdown, 2)) + "%"
         return finalLog
 
     def addTransaction(self, transaction, wallet, index):

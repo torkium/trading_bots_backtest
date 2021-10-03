@@ -1,8 +1,9 @@
 from core.abstractstrat import AbstractStrat
+from core.exchanges.binancefutures import BinanceFutures
 from core.transaction.leverageorder import LeverageOrder
 from decimal import *
 
-class AbstractStratFutures(AbstractStrat):
+class AbstractStratFutures(BinanceFutures, AbstractStrat):
     leverage = None
     orderInProgress = None
     walletInPosition = None
@@ -73,7 +74,7 @@ class AbstractStratFutures(AbstractStrat):
         print(self.wallet.toString(self.historic[self.mainTimeFrame]['close'].iloc[-1]))
         print(self.getFinalLog())
 
-    
+
 
     def addTransaction(self, transaction, wallet, index):
         self.totalFees += transaction.fees
@@ -89,7 +90,7 @@ class AbstractStratFutures(AbstractStrat):
             if self.last_transaction.type == LeverageOrder.ORDER_TYPE_SHORT:
                 pr_change *= -1
             gain = transaction.amount*(pr_change/self.last_transaction.price)*transaction.leverage - transaction.fees
-            transaction.finalAmount = transaction.amount + gain 
+            transaction.finalAmount = transaction.amount + gain
             wallet.base += gain
             self.walletInPosition -= transaction.amount
         if transaction.type == LeverageOrder.ORDER_TYPE_LIQUIDATE:
@@ -111,12 +112,12 @@ class AbstractStratFutures(AbstractStrat):
             if self.currentDrawdown > self.maxDrawdown:
                 self.maxDrawdown = self.currentDrawdown
 
-        
+
     def getPercentWalletInPosition(self, wallet):
         if self.walletInPosition == None or wallet.base == None or wallet.base == 0:
             return 0
         return Decimal(self.walletInPosition/wallet.base)*100
-    
+
     def hasPercentWalletNotInPosition(self, percent, wallet):
         if wallet.base == None:
             return False
@@ -137,7 +138,7 @@ class AbstractStratFutures(AbstractStrat):
         Must return the percent of current long trade to close
         """
         return 100
-        
+
     #To determine short open condition
     def shortOpenConditions(self, lastIndex):
         """
@@ -145,7 +146,7 @@ class AbstractStratFutures(AbstractStrat):
         Must return the percent of Wallet to take position.
         """
         return 0
-    
+
     #To determine short close condition
     def shortCloseConditions(self, lastIndex):
         """
