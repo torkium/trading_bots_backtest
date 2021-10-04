@@ -4,10 +4,8 @@ import csv
 class CsvHistory:
 
     @staticmethod
-    def write(historic, indicators_keys, wallet, transactions, history, startDate, endDate=None):
-        fileName = wallet.tradeCurrency + wallet.baseCurrency + str(startDate) + str(endDate) + ".csv"
-        fileName = fileName.replace(" ", "").replace(":","").replace("-","")
-        f = open('./' + fileName, 'w', encoding='UTF8', newline="")
+    def write(csvFileName, historic, indicators_keys, wallet, transactions, history, startDate, endDate=None):
+        f = open('./' + csvFileName, 'w', encoding='UTF8', newline="")
         writer = csv.writer(f, delimiter=';')
         headers = ['datetime', 'action', 'amount', 'fees', 'wallet_from_base', 'wallet_from_trade', 'wallet_to_base', 'wallet_to_trade', 'start_trade_amount', 'final_trade_amount', 'trade_state (%)', 'drawdown (%)', 'open', 'high', 'low', 'close', 'volume']
         for key in indicators_keys:

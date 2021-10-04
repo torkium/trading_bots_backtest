@@ -12,7 +12,7 @@ class AbstractStratFutures(AbstractStrat):
         self.leverage = leverage
         self.walletInPosition = 0
 
-    def backtest(self):
+    def backtest(self, csvFileName=None):
         #Used to check previous period, and not current period (because not closed)
         lastIndex = self.exchange.historic[self.mainTimeFrame].first_valid_index()
         #For each historical entry
@@ -23,19 +23,19 @@ class AbstractStratFutures(AbstractStrat):
                 if longCondition > 0:
                     #Open Long order
                     amount = Decimal(self.wallet.base * longCondition / 100)
-                    fees =  amount * self.leverage * Decimal(self.exchange.feesRateFuture)
+                    fees =  amount * self.leverage * Decimal(self.exchange.feesRate)
                     self.orderInProgress = LeverageOrder(self.leverage, LeverageOrder.ORDER_TYPE_LONG, amount, fees, self.exchange.historic[self.mainTimeFrame]['open'][index], self.wallet.baseCurrency, self.wallet.tradeCurrency, index)
                     self.addTransaction(self.orderInProgress, self.wallet, index)
                     print(self.transactions[index])
                 if longCondition == 0 and shortCondition > 0:
                     #Open Short order
                     amount = Decimal(self.wallet.base * shortCondition / 100)
-                    fees =  amount * self.leverage * Decimal(self.exchange.feesRateFuture)
+                    fees =  amount * self.leverage * Decimal(self.exchange.feesRate)
                     self.orderInProgress = LeverageOrder(self.leverage, LeverageOrder.ORDER_TYPE_SHORT, amount, fees, self.exchange.historic[self.mainTimeFrame]['open'][index], self.wallet.baseCurrency, self.wallet.tradeCurrency, index)
                     self.addTransaction(self.orderInProgress, self.wallet, index)
                     print(self.transactions[index])
             else:
-                liquidateFees =  (self.orderInProgress.amount/self.orderInProgress.price * self.orderInProgress.liquidationPrice) * self.orderInProgress.leverage * Decimal(self.exchange.feesRateFuture)
+                liquidateFees =  (self.orderInProgress.amount/self.orderInProgress.price * self.orderInProgress.liquidationPrice) * self.orderInProgress.leverage * Decimal(self.exchange.feesRate)
                 if self.orderInProgress.isLiquidated(self.exchange.historic[self.mainTimeFrame]['high'][lastIndex], self.exchange.historic[self.mainTimeFrame]['low'][lastIndex], liquidateFees):
                     self.addTransaction(self.orderInProgress.liquidate(liquidateFees, index), self.wallet, index)
                     self.orderInProgress = None
@@ -49,7 +49,7 @@ class AbstractStratFutures(AbstractStrat):
                 longCloseCondition = self.longCloseConditions(lastIndex)
                 shortCloseCondition = self.shortCloseConditions(lastIndex)
                 if self.orderInProgress.type == LeverageOrder.ORDER_TYPE_LONG and longCloseCondition>0:
-                    fees = (self.orderInProgress.amount/self.orderInProgress.price * self.exchange.historic[self.mainTimeFrame]['open'][index]) * self.orderInProgress.leverage * Decimal(self.exchange.feesRateFuture)
+                    fees = (self.orderInProgress.amount/self.orderInProgress.price * self.exchange.historic[self.mainTimeFrame]['open'][index]) * self.orderInProgress.leverage * Decimal(self.exchange.feesRate)
                     self.addTransaction(self.orderInProgress.close(fees, self.exchange.historic[self.mainTimeFrame]['open'][index], index, longCloseCondition), self.wallet, index)
                     self.orderInProgress = None
                     print(self.transactions[index])
@@ -57,7 +57,7 @@ class AbstractStratFutures(AbstractStrat):
                     lastIndex = index
                     continue
                 if self.orderInProgress.type == LeverageOrder.ORDER_TYPE_SHORT and shortCloseCondition>0:
-                    fees = (self.orderInProgress.amount/self.orderInProgress.price * self.exchange.historic[self.mainTimeFrame]['open'][index]) * self.orderInProgress.leverage * Decimal(self.exchange.feesRateFuture)
+                    fees = (self.orderInProgress.amount/self.orderInProgress.price * self.exchange.historic[self.mainTimeFrame]['open'][index]) * self.orderInProgress.leverage * Decimal(self.exchange.feesRate)
                     self.addTransaction(self.orderInProgress.close(fees, self.exchange.historic[self.mainTimeFrame]['open'][index], index, shortCloseCondition), self.wallet, index)
                     self.orderInProgress = None
                     print(self.transactions[index])
@@ -67,7 +67,7 @@ class AbstractStratFutures(AbstractStrat):
             lastIndex = index
         #Close the wallet at the end
         if self.orderInProgress != None:
-            fees = (self.orderInProgress.amount/self.orderInProgress.price * self.exchange.historic[self.mainTimeFrame]['open'][index]) * self.orderInProgress.leverage * Decimal(self.exchange.feesRateFuture)
+            fees = (self.orderInProgress.amount/self.orderInProgress.price * self.exchange.historic[self.mainTimeFrame]['open'][index]) * self.orderInProgress.leverage * Decimal(self.exchange.feesRate)
             self.addTransaction(self.orderInProgress.close(fees, self.exchange.historic[self.mainTimeFrame]['open'][index], index), self.wallet, index)
 
         print(self.wallet.toString(self.exchange.historic[self.mainTimeFrame]['close'].iloc[-1]))

@@ -2,20 +2,22 @@ from binance.client import Client
 from binance import ThreadedWebsocketManager
 from binance.enums import HistoricalKlinesType
 import pandas as pd
+import time
+from datetime import datetime
 from decimal import *
 
-class Binance:
+class BinanceSpot:
     historic = {}
 
     feesRate = Decimal(0.1/100)
-    feesRateFuture = Decimal(0.04/100)
+    klines_type = HistoricalKlinesType.FUTURES
 
     @staticmethod
     def getHistoric(tradingCurrency, baseCurrency, timeframe, startDate, endDate=None):
         devise = tradingCurrency+baseCurrency
-        if timeframe not in Binance.historic:
+        if timeframe not in BinanceSpot.historic:
             #Get history from Binance
-            klinesT = Client().get_historical_klines(devise, Binance.getTimeframe(timeframe), startDate, endDate, klines_type=HistoricalKlinesType.FUTURES)
+            klinesT = Client().get_historical_klines(devise, BinanceSpot.getTimeframe(timeframe), startDate, endDate, klines_type=BinanceSpot.klines_type)
             for row in klinesT:
                 row[1] = Decimal(row[1])
                 row[2] = Decimal(row[2])
@@ -33,8 +35,8 @@ class Binance:
             histo = histo.set_index(histo['timestamp'])
             histo.index = pd.to_datetime(histo.index, unit='ms')
             del histo['timestamp']
-            Binance.historic[timeframe] = histo
-        return Binance.historic[timeframe]
+            BinanceSpot.historic[timeframe] = histo
+        return BinanceSpot.historic[timeframe]
 
     @staticmethod
     def getTimeframe(timeframe):
@@ -60,6 +62,31 @@ class Binance:
             return Client.KLINE_INTERVAL_1WEEK
         
     @staticmethod
+    def getStartHistory(timeframe, maxPeriod):
+        timestamp = round(time.time())
+        if timeframe == "1m":
+            return (timestamp-maxPeriod*60)*1000
+        if timeframe == "5m":
+            return (timestamp-maxPeriod*60*5)*1000
+        if timeframe == "15m":
+            return (timestamp-maxPeriod*60*15)*1000
+        if timeframe == "30m":
+            return (timestamp-maxPeriod*60*30)*1000
+        if timeframe == "1h":
+            return (timestamp-maxPeriod*3600)*1000
+        if timeframe == "2h":
+            return (timestamp-maxPeriod*3600*2)*1000
+        if timeframe == "4h":
+            value = (timestamp-maxPeriod*3600*4)*1000
+            return value
+        if timeframe == "12h":
+            return (timestamp-maxPeriod*3600*12)*1000
+        if timeframe == "1d":
+            return (timestamp-maxPeriod*86400)*1000
+        if timeframe == "1w":
+            return (timestamp-maxPeriod*86400*7)*1000
+
+    @staticmethod
     def waitNewCandle(callback, devise, timeframe, apiKey, apiSecret):
         # open websocket
         twm = ThreadedWebsocketManager(api_key=apiKey, api_secret=apiSecret, testnet=False)
@@ -72,7 +99,7 @@ class Binance:
         return msg['e'] == 'kline' and msg['k']['x']
 
     @staticmethod
-    def appendNewCandle(msg, timeframe, devise):
+    def appendNewCandle(msg, timeframe, devise, max_period):
         if msg['e'] == 'kline' and msg['s'] == devise:
             kline = {
                     'open': Decimal(msg['k']['o']),
@@ -90,10 +117,9 @@ class Binance:
             df = pd.DataFrame(kline, index=[msg['k']['t']])
             df.index = pd.to_datetime(df.index, unit='ms')
 
-            if df.index[0] in Binance.historic[timeframe].index:
-                Binance.historic[timeframe].loc[df.index[0]] = df.iloc[0]
+            if df.index[0] in BinanceSpot.historic[timeframe].index:
+                BinanceSpot.historic[timeframe].loc[df.index[0]] = df.iloc[0]
             else:
-                Binance.historic[timeframe] = Binance.historic[timeframe].append(df)
+                BinanceSpot.historic[timeframe] = BinanceSpot.historic[timeframe].append(df)
 
-            #TODO : Take in account timeframe and max indicators period to determinate value of tail
-            Binance.historic[timeframe] = Binance.historic[timeframe].tail(500)
+            BinanceSpot.historic[timeframe] = BinanceSpot.historic[timeframe].tail(max_period)

@@ -10,10 +10,11 @@ class StratBtcFuture(AbstractStratFutures):
     def setIndicators(self, timeframe):
         Indicators.setIndicators(self.exchange.historic[timeframe])
 
-    def backtest(self):
+    def backtest(self, csvFileName=None):
         self.setIndicators(self.mainTimeFrame)
         super().backtest()
-        CsvHistory.write(self.exchange.historic[self.mainTimeFrame], Indicators.INDICATORS_KEYS, self.wallet, self.transactions, self.history, self.startDate, self.endDate)
+        if csvFileName != None:
+            CsvHistory.write(csvFileName, self.exchange.historic[self.mainTimeFrame], Indicators.INDICATORS_KEYS, self.wallet, self.transactions, self.history, self.startDate, self.endDate)
 
     def run(self, client, apiKey, apiSecret):
         super().run(client, apiKey, apiSecret)
@@ -31,7 +32,7 @@ class StratBtcFuture(AbstractStratFutures):
         Must return the percent of Wallet to take position.
         """
         if self.step == "main":     
-            if self.exchange.historic[self.mainTimeFrame]['EMA20EVOL'][lastIndex] > 1 and self.exchange.historic[self.mainTimeFrame]['EMATREND'][lastIndex] == 2 and self.exchange.historic[self.mainTimeFrame]['RSI'][lastIndex] < 70 and self.exchange.historic[self.mainTimeFrame]['RSIEVOL'][lastIndex] > 1 and self.hasPercentWalletNotInPosition(10, self.wallet):
+            if self.exchange.historic[self.mainTimeFrame]['EMA20EVOL'][lastIndex] > 1 and self.exchange.historic[self.mainTimeFrame]['EMATREND'][lastIndex] == 2 and self.exchange.historic[self.mainTimeFrame]['RSI'][lastIndex] < Indicators.RSI_OVERBOUGHT and self.exchange.historic[self.mainTimeFrame]['RSIEVOL'][lastIndex] > 1 and self.hasPercentWalletNotInPosition(10, self.wallet):
                 return 50
         return 0
 
@@ -55,7 +56,7 @@ class StratBtcFuture(AbstractStratFutures):
         Must return the percent of Wallet to take position.
         """
         if self.step == "main":
-            if self.exchange.historic[self.mainTimeFrame]['EMA20EVOL'][lastIndex] < -1 and self.exchange.historic[self.mainTimeFrame]['EMATREND'][lastIndex] == -2 and self.exchange.historic[self.mainTimeFrame]['RSI'][lastIndex] > 30 and self.exchange.historic[self.mainTimeFrame]['RSIEVOL'][lastIndex] < -1 and self.hasPercentWalletNotInPosition(10, self.wallet):
+            if self.exchange.historic[self.mainTimeFrame]['EMA20EVOL'][lastIndex] < -1 and self.exchange.historic[self.mainTimeFrame]['EMATREND'][lastIndex] == -2 and self.exchange.historic[self.mainTimeFrame]['RSI'][lastIndex] > Indicators.RSI_OVERSOLD and self.exchange.historic[self.mainTimeFrame]['RSIEVOL'][lastIndex] < -1 and self.hasPercentWalletNotInPosition(10, self.wallet):
                 return 50
         return 0
     

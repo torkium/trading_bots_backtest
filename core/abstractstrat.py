@@ -1,4 +1,5 @@
 from core.wallet import Wallet
+from core.abstractindicators import AbstractIndicators
 from decimal import *
 
 class AbstractStrat:
@@ -40,7 +41,7 @@ class AbstractStrat:
     def setIndicators(self, timeframe):
         return None
 
-    def backtest(self):
+    def backtest(self, csvFileName=None):
         """
         To launch backtest on strat
         """
@@ -66,15 +67,15 @@ class AbstractStrat:
 
     def run(self, client, apiKey, apiSecret):
         self.client = client(apiKey, apiSecret)
-        #TODO : Take in account timeframe and max indicators period to determinate start date history
-        self.exchange.historic[self.mainTimeFrame] = self.exchange.getHistoric(self.tradingCurrency, self.baseCurrency, self.mainTimeFrame, "1 day ago UTC").tail(500)
+        self.exchange.historic[self.mainTimeFrame] = self.exchange.getHistoric(self.tradingCurrency, self.baseCurrency, self.mainTimeFrame, self.exchange.getStartHistory(self.mainTimeFrame, AbstractIndicators.MAX_PERIOD)).tail(AbstractIndicators.MAX_PERIOD)
         self.startWallet = self.wallet.getTotalAmount(self.exchange.historic[self.mainTimeFrame]['open'].iloc[0])
         self.minWallet = self.startWallet
         self.maxWallet = self.startWallet
+        print("historic getted. Wait new closed candle...")
         self.exchange.waitNewCandle(self.newCandleCallback, self.tradingCurrency+self.baseCurrency, self.mainTimeFrame, apiKey, apiSecret)
 
     def newCandleCallback(self, msg):
-        self.exchange.appendNewCandle(msg, self.mainTimeFrame, self.tradingCurrency+self.baseCurrency)
+        self.exchange.appendNewCandle(msg, self.mainTimeFrame, self.tradingCurrency+self.baseCurrency, AbstractIndicators.MAX_PERIOD)
         self.setIndicators(self.mainTimeFrame)
         return None
 

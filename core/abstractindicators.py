@@ -1,3 +1,4 @@
+from decimal import MAX_EMAX
 import ta
 import pandas as pd
 
@@ -5,10 +6,18 @@ class AbstractIndicators:
     
     INDICATORS_KEYS = []
 
+    MAX_PERIOD = 400
+    PERIODS = [20,50,100,200]
+    RSI_PERIOD = 14
+    RSI_OVERBOUGHT = 70
+    RSI_OVERSOLD = 30
+    MACD_SLOW = 26
+    MACD_FAST = 12
+    MACD_SIGN = 9
+
     @staticmethod
     def setIndicators(historic):
-        periods = [20,50,100,200]
-        for period in periods:
+        for period in AbstractIndicators.PERIODS:
             period_string = str(period)
             historic['SMA' + period_string] = ta.trend.sma_indicator(historic['close'], period)
             historic['SMA' + period_string + 'EVOL'] = AbstractIndicators.setEvol('SMA' + period_string, historic)
@@ -24,11 +33,11 @@ class AbstractIndicators:
             AbstractIndicators.INDICATORS_KEYS.append('EMA' + period_string + 'SLOPE')
         historic['EMATREND'] = AbstractIndicators.setMainTrend("EMA", historic)
         historic['SMATREND'] = AbstractIndicators.setMainTrend("EMA", historic)
-        historic['RSI'] = ta.momentum.RSIIndicator(historic['close'], window=14).rsi()
+        historic['RSI'] = ta.momentum.RSIIndicator(historic['close'], window=AbstractIndicators.RSI_PERIOD).rsi()
         historic['RSIEVOL'] = AbstractIndicators.setEvol('RSI', historic)
         historic['PRICEEVOL'] = AbstractIndicators.setEvol('close', historic)
         historic['VOLUMEEVOL'] = AbstractIndicators.setEvol('volume', historic)
-        historic['MACD'] = ta.trend.MACD(historic['close']).macd()
+        historic['MACD'] = ta.trend.MACD(historic['close'], window_slow=AbstractIndicators.MACD_SLOW, window_fast=AbstractIndicators.MACD_FAST, window_sign=AbstractIndicators.MACD_SIGN).macd()
         historic['MACDDIFF'] = ta.trend.MACD(historic['close']).macd_diff()
         historic['MACDSIGN'] = ta.trend.MACD(historic['close']).macd_signal()
         AbstractIndicators.INDICATORS_KEYS.append('EMATREND')
