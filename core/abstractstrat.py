@@ -36,6 +36,10 @@ class AbstractStrat:
         self.maxDrawdown = 0
         self.totalFees = 0
 
+    
+    def setIndicators(self, timeframe):
+        return None
+
     def backtest(self):
         """
         To launch backtest on strat
@@ -46,10 +50,10 @@ class AbstractStrat:
         """
         To launch backtest on strat
         """
-        self.historic = {self.mainTimeFrame: self.exchange.getHistoric(self.tradingCurrency, self.baseCurrency, self.mainTimeFrame, startDate, endDate)}
+        self.exchange.getHistoric(self.tradingCurrency, self.baseCurrency, self.mainTimeFrame, startDate, endDate)
         self.startDate = startDate
         self.endDate = endDate
-        self.startWallet = self.wallet.getTotalAmount(self.historic[self.mainTimeFrame]['open'].iloc[0])
+        self.startWallet = self.wallet.getTotalAmount(self.exchange.historic[self.mainTimeFrame]['open'].iloc[0])
         self.minWallet = self.startWallet
         self.maxWallet = self.startWallet
         return None
@@ -60,17 +64,24 @@ class AbstractStrat:
         """
         return None
 
-    def run(self):
-        """
-        To launch strat in live real mode
-        """
+    def run(self, client, apiKey, apiSecret):
+        self.client = client(apiKey, apiSecret)
+        #TODO : Take in account timeframe and max indicators period to determinate start date history
+        self.exchange.historic[self.mainTimeFrame] = self.exchange.getHistoric(self.tradingCurrency, self.baseCurrency, self.mainTimeFrame, "1 day ago UTC").tail(500)
+        self.startWallet = self.wallet.getTotalAmount(self.exchange.historic[self.mainTimeFrame]['open'].iloc[0])
+        self.minWallet = self.startWallet
+        self.maxWallet = self.startWallet
+        self.exchange.waitNewCandle(self.newCandleCallback, self.tradingCurrency+self.baseCurrency, self.mainTimeFrame, apiKey, apiSecret)
+
+    def newCandleCallback(self, msg):
+        self.exchange.appendNewCandle(msg, self.mainTimeFrame, self.tradingCurrency+self.baseCurrency)
+        self.setIndicators(self.mainTimeFrame)
         return None
 
-
     def getFinalLog(self):
-        finalLog = "Wallet From " + str(self.startWallet) + " " + self.wallet.baseCurrency + " to " + str(self.wallet.getTotalAmount(self.historic[self.mainTimeFrame]['close'].iloc[-1])) + " " + self.wallet.baseCurrency + " (" + str((self.wallet.getTotalAmount(self.historic[self.mainTimeFrame]['close'].iloc[-1])-self.startWallet)*100/self.startWallet) + "%)\n"
+        finalLog = "Wallet From " + str(self.startWallet) + " " + self.wallet.baseCurrency + " to " + str(self.wallet.getTotalAmount(self.exchange.historic[self.mainTimeFrame]['close'].iloc[-1])) + " " + self.wallet.baseCurrency + " (" + str((self.wallet.getTotalAmount(self.exchange.historic[self.mainTimeFrame]['close'].iloc[-1])-self.startWallet)*100/self.startWallet) + "%)\n"
         finalLog += "Total fees : " + str(self.totalFees) + " " + self.wallet.baseCurrency + "\n"
-        finalLog += "Buy & hold From " + str(self.startWallet) + " " + self.wallet.baseCurrency + " to " + str(self.startWallet * self.historic[self.mainTimeFrame]['close'].iloc[-1] / self.historic[self.mainTimeFrame]['open'].iloc[0]) + " " + self.wallet.baseCurrency + " (" + str((self.startWallet * self.historic[self.mainTimeFrame]['close'].iloc[-1] / self.historic[self.mainTimeFrame]['open'].iloc[0]-self.startWallet)*100/self.startWallet) + "%)\n"
+        finalLog += "Buy & hold From " + str(self.startWallet) + " " + self.wallet.baseCurrency + " to " + str(self.startWallet * self.exchange.historic[self.mainTimeFrame]['close'].iloc[-1] / self.exchange.historic[self.mainTimeFrame]['open'].iloc[0]) + " " + self.wallet.baseCurrency + " (" + str((self.startWallet * self.exchange.historic[self.mainTimeFrame]['close'].iloc[-1] / self.exchange.historic[self.mainTimeFrame]['open'].iloc[0]-self.startWallet)*100/self.startWallet) + "%)\n"
         transactions_type = {}
         for key in self.transactions:
             if not self.transactions[key].type in transactions_type:
@@ -109,11 +120,11 @@ class AbstractStrat:
                 self.maxDrawdown = self.currentDrawdown
 
     def addHistory(self, timeframe):
-        self.historic[timeframe] = self.exchange.getHistoric(self.tradingCurrency, self.baseCurrency, timeframe, self.startDate, self.endDate)
+        self.exchange.historic[timeframe] = self.exchange.getHistoric(self.tradingCurrency, self.baseCurrency, timeframe, self.startDate, self.endDate)
 
     def getLastHistoryIndex(self, index, timeframe):
         timeToReturn = None
-        for key in self.historic[timeframe]:
+        for key in self.exchange.historic[timeframe]:
             if key >= index:
                 return timeToReturn
             timeToReturn = key

@@ -1,0 +1,3 @@
+binance_futures:
+  api_key: <Your binance futures API KEY>
+  api_secret: <Your binance futures API SECRET>
