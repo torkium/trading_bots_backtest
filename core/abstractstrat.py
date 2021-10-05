@@ -36,6 +36,7 @@ class AbstractStrat:
         self.currentDrawdown = 0
         self.maxDrawdown = 0
         self.totalFees = 0
+        self.stopLoss = 0
 
     
     def setIndicators(self, timeframe):
@@ -90,6 +91,7 @@ class AbstractStrat:
             transactions_type[self.transactions[key].type] += 1
         for key in transactions_type:
             finalLog += key + " : " + str(transactions_type[key]) + "\n"
+        finalLog += "Stop Loss : " + str(self.stopLoss) + "\n"
         finalLog += "Min Wallet : " + str(self.minWallet) + " " + self.wallet.baseCurrency + "\n"
         finalLog += "Max Wallet : " + str(self.maxWallet) + " " + self.wallet.baseCurrency + "\n"
         finalLog += "Max Drawdown : " + str(self.maxDrawdown) + "%"

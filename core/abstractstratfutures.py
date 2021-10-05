@@ -35,8 +35,24 @@ class AbstractStratFutures(AbstractStrat):
                     self.addTransaction(self.orderInProgress, self.wallet, index)
                     print(self.transactions[index])
             else:
+                lowerPrice = self.exchange.historic[self.mainTimeFrame]['low'][lastIndex]
+                higherPrice = self.exchange.historic[self.mainTimeFrame]['high'][lastIndex]
                 liquidateFees =  (self.orderInProgress.amount/self.orderInProgress.price * self.orderInProgress.liquidationPrice) * self.orderInProgress.leverage * Decimal(self.exchange.feesRate)
-                if self.orderInProgress.isLiquidated(self.exchange.historic[self.mainTimeFrame]['high'][lastIndex], self.exchange.historic[self.mainTimeFrame]['low'][lastIndex], liquidateFees):
+                stopLossHitted = False
+                liquidatedBeforeStopLoss = False
+                stopLossLongPrice = self.stopLossLongPrice(lastIndex)
+                stopLossShortPrice = self.stopLossShortPrice(lastIndex)
+                if self.orderInProgress.type == LeverageOrder.ORDER_TYPE_LONG:
+                    stopLossPrice = stopLossLongPrice
+                    if stopLossPrice!=None:
+                        liquidatedBeforeStopLoss = self.orderInProgress.isLiquidated(higherPrice, stopLossPrice, liquidateFees)
+                        stopLossHitted = stopLossLongPrice >= lowerPrice
+                if self.orderInProgress.type == LeverageOrder.ORDER_TYPE_SHORT:
+                    stopLossPrice = stopLossShortPrice
+                    if stopLossPrice!=None:
+                        liquidatedBeforeStopLoss = self.orderInProgress.isLiquidated(stopLossPrice, lowerPrice, liquidateFees)
+                        stopLossHitted = stopLossShortPrice <= higherPrice
+                if liquidatedBeforeStopLoss or (not stopLossHitted and self.orderInProgress.isLiquidated(higherPrice, lowerPrice, liquidateFees)):
                     self.addTransaction(self.orderInProgress.liquidate(liquidateFees, index), self.wallet, index)
                     self.orderInProgress = None
                     print(self.transactions[index])
@@ -48,17 +64,26 @@ class AbstractStratFutures(AbstractStrat):
                         break
                 longCloseCondition = self.longCloseConditions(lastIndex)
                 shortCloseCondition = self.shortCloseConditions(lastIndex)
+                priceToClose = self.exchange.historic[self.mainTimeFrame]['open'][index]
+                if self.orderInProgress.type == LeverageOrder.ORDER_TYPE_LONG and stopLossLongPrice != None and stopLossLongPrice > lowerPrice:
+                    longCloseCondition = 100
+                    priceToClose = stopLossLongPrice
+                    self.stopLoss += 1
+                if self.orderInProgress.type == LeverageOrder.ORDER_TYPE_SHORT and stopLossShortPrice != None and stopLossShortPrice < higherPrice:
+                    shortCloseCondition = 100
+                    priceToClose = stopLossShortPrice
+                    self.stopLoss += 1
                 if self.orderInProgress.type == LeverageOrder.ORDER_TYPE_LONG and longCloseCondition>0:
-                    fees = (self.orderInProgress.amount/self.orderInProgress.price * self.exchange.historic[self.mainTimeFrame]['open'][index]) * self.orderInProgress.leverage * Decimal(self.exchange.feesRate)
-                    self.addTransaction(self.orderInProgress.close(fees, self.exchange.historic[self.mainTimeFrame]['open'][index], index, longCloseCondition), self.wallet, index)
+                    fees = (self.orderInProgress.amount/self.orderInProgress.price * priceToClose) * self.orderInProgress.leverage * Decimal(self.exchange.feesRate)
+                    self.addTransaction(self.orderInProgress.close(fees, priceToClose, index, longCloseCondition), self.wallet, index)
                     self.orderInProgress = None
                     print(self.transactions[index])
                     print(self.wallet.toString(self.exchange.historic[self.mainTimeFrame]['open'][index]))
                     lastIndex = index
                     continue
                 if self.orderInProgress.type == LeverageOrder.ORDER_TYPE_SHORT and shortCloseCondition>0:
-                    fees = (self.orderInProgress.amount/self.orderInProgress.price * self.exchange.historic[self.mainTimeFrame]['open'][index]) * self.orderInProgress.leverage * Decimal(self.exchange.feesRate)
-                    self.addTransaction(self.orderInProgress.close(fees, self.exchange.historic[self.mainTimeFrame]['open'][index], index, shortCloseCondition), self.wallet, index)
+                    fees = (self.orderInProgress.amount/self.orderInProgress.price * priceToClose) * self.orderInProgress.leverage * Decimal(self.exchange.feesRate)
+                    self.addTransaction(self.orderInProgress.close(fees, priceToClose, index, shortCloseCondition), self.wallet, index)
                     self.orderInProgress = None
                     print(self.transactions[index])
                     print(self.wallet.toString(self.exchange.historic[self.mainTimeFrame]['open'][index]))
@@ -122,7 +147,6 @@ class AbstractStratFutures(AbstractStrat):
             return False
         return 100-self.getPercentWalletInPosition(wallet)>=percent
 
-    #To determine long open condition
     def longOpenConditions(self,lastIndex):
         """
         To determine long condition.
@@ -130,7 +154,6 @@ class AbstractStratFutures(AbstractStrat):
         """
         return 0
 
-    #To determine long close condition
     def longCloseConditions(self, lastIndex):
         """
         To determine long close.
@@ -138,7 +161,6 @@ class AbstractStratFutures(AbstractStrat):
         """
         return 100
         
-    #To determine short open condition
     def shortOpenConditions(self, lastIndex):
         """
         To determine short condition.
@@ -146,10 +168,23 @@ class AbstractStratFutures(AbstractStrat):
         """
         return 0
     
-    #To determine short close condition
     def shortCloseConditions(self, lastIndex):
         """
         To determine short close.
         Must return the percent of current short trade to close
         """
         return 100
+    
+    def stopLossLongPrice(self, lastIndex):
+        """
+        To determine stop loss condition for long order
+        Must return the price to stop loss, or none
+        """
+        return None
+    
+    def stopLossShortPrice(self, lastIndex):
+        """
+        To determine stop loss condition for short order
+        Must return the price to stop loss, or none
+        """
+        return None

@@ -1,5 +1,5 @@
 from core.abstractstratfutures import AbstractStratFutures
-from indicators.indicators import Indicators
+from src.indicators.indicators import Indicators
 from core.csvhistory import CsvHistory
 
 class StratBtcFuture(AbstractStratFutures):
@@ -8,6 +8,8 @@ class StratBtcFuture(AbstractStratFutures):
         super().__init__(exchange, baseCurrency, tradingCurrency, base, trade, mainTimeFrame, leverage)
 
     def setIndicators(self, timeframe):
+        Indicators.RSI_OVERBOUGHT = 72
+        Indicators.RSI_OVERSOLD = 34
         Indicators.setIndicators(self.exchange.historic[timeframe])
 
     def backtest(self, csvFileName=None):
@@ -69,6 +71,22 @@ class StratBtcFuture(AbstractStratFutures):
         if self.step == "main":
             if (self.exchange.historic[self.mainTimeFrame]['EMA20EVOL'][lastIndex] == 1) or (self.exchange.historic[self.mainTimeFrame]['PRICEEVOL'][lastIndex] > 1 and self.exchange.historic[self.mainTimeFrame]['VOLUMEEVOL'][lastIndex] > 1):
                 return 100
-            if 100*(self.exchange.historic[self.mainTimeFrame]['close'][lastIndex] - self.orderInProgress.price)/self.orderInProgress.price > 3:
-                return 100
         return 0
+    
+    def stopLossLongPrice(self, lastIndex):
+        """
+        To determine stop loss price for long order
+        Must return the price to stop loss, or none
+        """
+        #return None
+        stopLossPercent = 3
+        return self.orderInProgress.price - self.orderInProgress.price*stopLossPercent/100
+    
+    def stopLossShortPrice(self, lastIndex):
+        """
+        To determine stop loss price for short order
+        Must return the price to stop loss, or none
+        """
+        #return None
+        stopLossPercent = 2
+        return self.orderInProgress.price + self.orderInProgress.price*stopLossPercent/100
